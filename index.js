@@ -12,14 +12,14 @@ const INITIAL_STATE = 0
 
 externals.Instance = (function () {
 
-  function Instance(model, emitter) {
+  function Instance(model, emitter, middlewares) {
     /*this.flow = flow
     this.id = id*/
-    console.log(JSON.stringify(model))
     this.model = model
     this.actualState = this.model.states[INITIAL_STATE]
     this.middlewares = []
     this.internalEmitter = emitter
+    this.middlewares = middlewares
   }
 
   Instance.prototype.searchNextState = function (stateName) {
@@ -76,10 +76,6 @@ externals.Instance = (function () {
     })
   }
 
-  Instance.prototype.register = function (name, fn) {
-    this.middlewares[name] = fn
-  }
-
   return Instance
 })()
 
@@ -90,11 +86,12 @@ externals.Flow = (function () {
     this.name = name
     this.model = model
     this.instances = []
+    this.middlewares = []
     this.internalEmitter = new flowEmitter();
   }
 
   Flow.prototype.newInstance = function (id) {
-    this.instances[id] = new externals.Instance(this.model, this.internalEmitter)
+    this.instances[id] = new externals.Instance(this.model, this.internalEmitter, this.middlewares)
     return this.instances[id]
   }
 
@@ -109,6 +106,10 @@ externals.Flow = (function () {
 
   Flow.prototype.on = function (eventName, eventFunction) {
     this.internalEmitter.on(eventName, eventFunction)
+  }
+
+  Flow.prototype.register = function (name, fn) {
+    this.middlewares[name] = fn
   }
 
   return Flow

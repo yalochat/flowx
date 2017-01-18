@@ -11,13 +11,14 @@ const INITIAL_STATE = 0
 
 externals.Instance = (function () {
 
-  function Instance(model) {
+  function Instance(model, emitter) {
     /*this.flow = flow
     this.id = id*/
     console.log(JSON.stringify(model))
     this.model = model
     this.actualState = this.model.states[INITIAL_STATE]
     this.middlewares = []
+    this.internalEmitter = emitter
   }
 
   Instance.prototype.searchNextState = function (stateName) {
@@ -92,7 +93,7 @@ externals.Flow = (function () {
   }
 
   Flow.prototype.newInstance = function (id) {
-    this.instances[id] = new externals.Instance(this.model)
+    this.instances[id] = new externals.Instance(this.model, this.internalEmitter)
     return this.instances[id]
   }
 

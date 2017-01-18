@@ -18,7 +18,6 @@ externals.Instance = (function () {
     this.model = model
     this.actualState = this.model.states[INITIAL_STATE]
     this.middlewares = []
-    this.internalEmitter = new flowEmitter();
   }
 
   Instance.prototype.searchNextState = function (stateName) {
@@ -44,10 +43,6 @@ externals.Instance = (function () {
         return reject(new Error('No se pudo encontrar el estado en las transiciones'))
       }
     })
-  }
-
-  Instance.prototype.register = function (name, fn) {
-    this.middlewares[name] = fn
   }
 
   Instance.prototype.getState = function (data) {
@@ -79,8 +74,8 @@ externals.Instance = (function () {
     })
   }
 
-  Instance.prototype.on = function (eventName, eventFunction) {
-    this.internalEmitter.on(eventName, eventFunction)
+  Instance.prototype.register = function (name, fn) {
+    this.middlewares[name] = fn
   }
 
   return Instance
@@ -93,6 +88,7 @@ externals.Flow = (function () {
     this.name = name
     this.model = model
     this.instances = []
+    this.internalEmitter = new flowEmitter();
   }
 
   Flow.prototype.newInstance = function (id) {
@@ -107,6 +103,10 @@ externals.Flow = (function () {
 
   Flow.prototype.getInstance = function (id) {
     return this.instances[id]
+  }
+
+  Flow.prototype.on = function (eventName, eventFunction) {
+    this.internalEmitter.on(eventName, eventFunction)
   }
 
   return Flow

@@ -1,6 +1,7 @@
 'use strict'
 const Promise = require('bluebird')
 const EventEmitter = require('events');
+const Utils = require('./utils')
 
 let externals = {}
 
@@ -35,7 +36,7 @@ externals.Instance = (function () {
     return new Promise((resolve, reject) => {
       if (this.actualState.transitions) {
         this.actualState.transitions.forEach((v) => {
-          if (v.name === transitionName) {
+          if (Utils.matchRule(v.name, transitionName)) {
             return resolve(v)
           }
         })

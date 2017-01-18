@@ -49,7 +49,7 @@ externals.Instance = (function () {
 
   Instance.prototype.getState = function (data) {
     return new Promise((resolve, reject) => {
-      if (data.action) {
+      if (data && data.action) {
         this.validateTransition(data.action).then((transition) => {
           this.searchNextState(transition.to).then((v) => {
             if (transition.use) {

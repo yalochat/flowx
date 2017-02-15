@@ -6,7 +6,15 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": {
+    "name": "José De Paz",
+    "email": "jose@yalochat.com",
+    "url": "http://github.com/josedepaz/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/josedepaz/flowx.git"
+  },
   "license": "ISC",
   "dependencies": {
     "bluebird": "^3.4.7"

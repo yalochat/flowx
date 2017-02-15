@@ -24,9 +24,9 @@ externals.Instance = (function () {
 
   Instance.prototype.searchNextState = function (stateName) {
     return new Promise((resolve, reject) => {
-      this.model.states.forEach((v) => {
-        if (v.name === stateName) {
-          return resolve(v)
+      this.model.states.forEach((state) => {
+        if (state.name === stateName) {
+          return resolve(state)
         }
       })
     })
@@ -35,9 +35,9 @@ externals.Instance = (function () {
   Instance.prototype.validateTransition = function (transitionName) {
     return new Promise((resolve, reject) => {
       if (this.actualState.transitions) {
-        this.actualState.transitions.forEach((v) => {
-          if (Utils.matchRule(v.name, transitionName)) {
-            return resolve(v)
+        this.actualState.transitions.forEach((transition) => {
+          if (Utils.matchRule(transition.name, transitionName)) {
+            return resolve(transition)
           }
         })
         return reject(new Error('No se pudo encontrar el estado en las transiciones'))
@@ -51,14 +51,14 @@ externals.Instance = (function () {
     return new Promise((resolve, reject) => {
       if (data && data.action) {
         this.validateTransition(data.action).then((transition) => {
-          this.searchNextState(transition.to).then((v) => {
+          this.searchNextState(transition.to).then((nextState) => {
             if (transition.use) {
               this.middlewares[transition.use](this.actualState, (data) => {
-                this.actualState = v
+                this.actualState = nextState
                 return resolve(this.actualState)
               })
             } else {
-              this.actualState = v
+              this.actualState = nextState
               if (this.actualState.onEnter) {
                 if (this.actualState.onEnter.emit) {
                   this.internalEmitter.emit(this.actualState.onEnter.emit, this.actualState.onEnter.data)

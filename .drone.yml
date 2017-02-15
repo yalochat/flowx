@@ -1,0 +1,7 @@
+pipeline:
+  npm:
+    image: plugins/npm
+    username: josemanu
+    email: josemanuel@kuak.me
+    when:
+      event: tag

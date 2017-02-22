@@ -18,4 +18,9 @@ externals.matchRule = (rule, test, separator) => {
   return true
 }
 
+externals.matchRegExp = (rule, test) => {
+  const exp = new RegExp(rule, 'g')
+  return exp.test(test)
+}
+
 module.exports = externals

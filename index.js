@@ -29,6 +29,7 @@ externals.Instance = (function () {
           return resolve(state)
         }
       })
+      return reject(new Error('No default state found'))
     })
   }
 
@@ -36,7 +37,7 @@ externals.Instance = (function () {
     return new Promise((resolve, reject) => {
       if (this.actualState.transitions) {
         this.actualState.transitions.forEach((transition) => {
-          if (Utils.matchRule(transition.name, transitionName)) {
+          if (Utils.matchRule(transition.name, transitionName) || Utils.matchRegExp(transition.name, transitionName)) {
             return resolve(transition)
           }
         })
@@ -68,7 +69,17 @@ externals.Instance = (function () {
             }
           })
         }).catch((err) => {
-          return resolve({ template: err })
+          this.searchNextState('default').then((nextState) => {
+            this.actualState = nextState
+            if (this.actualState.onEnter) {
+              if (this.actualState.onEnter.emit) {
+                this.internalEmitter.emit(this.actualState.onEnter.emit, this.actualState.onEnter.data)
+              }
+            }
+            return resolve(this.actualState)
+          }).catch((err) => {
+            return resolve({ template: err })
+          })
         })
       } else {
         return resolve(this.actualState)

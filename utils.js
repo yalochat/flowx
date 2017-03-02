@@ -2,7 +2,7 @@
 
 let externals = {}
 
-externals.matchRule = (rule, test, separator) => {
+module.exports.matchRule = (rule, test, separator) => {
   const ruleArray = rule.split(separator || '.')
   const testArray = test.split(separator || '.')
 
@@ -18,14 +18,14 @@ externals.matchRule = (rule, test, separator) => {
   return true
 }
 
-externals.matchRegExp = (rule, test) => {
+module.exports.matchRegExp = (rule, test) => {
   const ruleArray = rule.split('/')
-  const exp = {}
-  if (rule.ruleArray > 1)
-    exp = new RegExp(ruleArray[0], ruleArray[1])
-  else
-    exp = new RegExp(ruleArray[0])
+  let exp = {}
+  console.log(JSON.stringify(ruleArray))
+  if (ruleArray.length > 2) {
+    exp = new RegExp(ruleArray[1], ruleArray[2])
+  } else {
+    exp = new RegExp(ruleArray[1])
+  }
   return exp.test(test)
 }
-
-module.exports = externals

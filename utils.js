@@ -1,7 +1,5 @@
 'use strict'
 
-let externals = {}
-
 module.exports.matchRule = (rule, test, separator) => {
   const ruleArray = rule.split(separator || '.')
   const testArray = test.split(separator || '.')

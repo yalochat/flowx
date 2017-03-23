@@ -2,8 +2,13 @@
 const Promise = require('bluebird')
 const EventEmitter = require('events');
 const Utils = require('./utils')
+const Catbox = require('catbox')
+const CatboxMemory = require('catbox-memory')
 
 let externals = {}
+let internals = {}
+
+internals.client = new Catbox.Client(CatboxMemory)
 
 class flowEmitter extends EventEmitter { }
 

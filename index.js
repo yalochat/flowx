@@ -141,7 +141,7 @@ module.exports.new = () => {
           //return this.instances[id]
           return new Promise((resolve, reject) => {
             client.get(id, (err, cached) => {
-              if (err) {
+              if (err || !cached) {
                 this.newInstance(id).then((newInstance) => {
                   resolve(newInstance)
                 }).catch((err) => {

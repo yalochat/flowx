@@ -142,9 +142,11 @@ module.exports.new = () => {
           return new Promise((resolve, reject) => {
             client.get(id, (err, cached) => {
               if (err) {
-                reject(err)
-              } else if (!cached) {
-                reject(new Error('Data not found'))
+                this.newInstance(id).then((newInstance) => {
+                  resolve(newInstance)
+                }).catch((err) => {
+                  reject(err)
+                })
               }
               resolve(cached.item)
             })

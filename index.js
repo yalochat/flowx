@@ -147,8 +147,9 @@ module.exports.new = () => {
                 }).catch((err) => {
                   reject(err)
                 })
+              } else {
+                resolve(cached.item)
               }
-              resolve(cached.item)
             })
           })
         }

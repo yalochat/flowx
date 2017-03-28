@@ -22,9 +22,9 @@ module.exports.new = () => {
 
       externals.Instance = (function () {
 
-        function Instance(id, emitter, middlewares) {
+        function Instance(id, emitter, middlewares, initState) {
           this.id = id
-          this.actualState = this.model.states[INITIAL_STATE]
+          this.actualState = initState
           this.middlewares = []
           this.internalEmitter = emitter
           this.middlewares = middlewares
@@ -44,9 +44,9 @@ module.exports.new = () => {
         }
 
         Flow.prototype.newInstance = function (id) {
-          console.log('CREANDO NUEVA INSTANCIA')
           return new Promise((resolve, reject) => {
-            var newInstance = new externals.Instance(id, this.internalEmitter, this.middlewares)
+            var newInstance = new externals.Instance(id, this.internalEmitter, this.middlewares, this.model.states[INITIAL_STATE])
+            console.log('CREANDO NUEVA INSTANCIA ' + JSON.stringify(newInstance))
             client.set(id, newInstance, this.model.ttl, (err) => {
               if (err) {
                 reject(err)
@@ -77,7 +77,7 @@ module.exports.new = () => {
                   reject(err)
                 })
               } else {
-                console.log('INSTANCIA ENCONTRADA')
+                console.log('INSTANCIA ENCONTRADA ' + JSON.stringify(cached.item))
                 resolve(cached.item)
               }
             })

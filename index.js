@@ -22,79 +22,12 @@ module.exports.new = () => {
 
       externals.Instance = (function () {
 
-        function Instance(model, emitter, middlewares) {
-          /*this.flow = flow
-          this.id = id*/
-          this.model = model
+        function Instance(id, emitter, middlewares) {
+          this.id = id
           this.actualState = this.model.states[INITIAL_STATE]
           this.middlewares = []
           this.internalEmitter = emitter
           this.middlewares = middlewares
-        }
-
-        Instance.prototype.searchNextState = function (stateName) {
-          return new Promise((resolve, reject) => {
-            this.model.states.forEach((state) => {
-              if (state.name === stateName) {
-                return resolve(state)
-              }
-            })
-            return reject(new Error('No default state found'))
-          })
-        }
-
-        Instance.prototype.validateTransition = function (transitionName) {
-          return new Promise((resolve, reject) => {
-            if (this.actualState.transitions) {
-              this.actualState.transitions.forEach((transition) => {
-                if (Utils.matchRule(transition.name, transitionName) || Utils.matchRegExp(transition.name, transitionName)) {
-                  return resolve(transition)
-                }
-              })
-              return reject(new Error('No se pudo encontrar el estado en las transiciones'))
-            } else {
-              return reject(new Error('No se pudo encontrar el estado en las transiciones'))
-            }
-          })
-        }
-
-        Instance.prototype.getState = function (data) {
-          return new Promise((resolve, reject) => {
-            if (data && data.action) {
-              this.validateTransition(data.action).then((transition) => {
-                this.searchNextState(transition.to).then((nextState) => {
-                  if (transition.use) {
-                    this.middlewares[transition.use](this.actualState, (data) => {
-                      this.actualState = nextState
-                      return resolve(this.actualState)
-                    })
-                  } else {
-                    this.actualState = nextState
-                    if (this.actualState.onEnter) {
-                      if (this.actualState.onEnter.emit) {
-                        this.internalEmitter.emit(this.actualState.onEnter.emit, this.actualState.onEnter.data)
-                      }
-                    }
-                    return resolve(this.actualState)
-                  }
-                })
-              }).catch((err) => {
-                this.searchNextState('default').then((nextState) => {
-                  this.actualState = nextState
-                  if (this.actualState.onEnter) {
-                    if (this.actualState.onEnter.emit) {
-                      this.internalEmitter.emit(this.actualState.onEnter.emit, this.actualState.onEnter.data)
-                    }
-                  }
-                  return resolve(this.actualState)
-                }).catch((err) => {
-                  return resolve({ template: err })
-                })
-              })
-            } else {
-              return resolve(this.actualState)
-            }
-          })
         }
 
         return Instance
@@ -111,10 +44,9 @@ module.exports.new = () => {
         }
 
         Flow.prototype.newInstance = function (id) {
-          //this.instances[id] = new externals.Instance(this.model, this.internalEmitter, this.middlewares)
-          //return this.instances[id]
+          console.log('CREANDO NUEVA INSTANCIA')
           return new Promise((resolve, reject) => {
-            var newInstance = new externals.Instance(this.model, this.internalEmitter, this.middlewares)
+            var newInstance = new externals.Instance(id, this.internalEmitter, this.middlewares)
             client.set(id, newInstance, this.model.ttl, (err) => {
               if (err) {
                 reject(err)
@@ -125,8 +57,6 @@ module.exports.new = () => {
         }
 
         Flow.prototype.addInstance = function (instance) {
-          //this.instance[instance.id] = instance
-          //return this.instances[instance.id]
           return new Promise((resolve, reject) => {
             client.set(instance.id, instance, this.model.ttl, (err) => {
               if (err) {
@@ -138,7 +68,6 @@ module.exports.new = () => {
         }
 
         Flow.prototype.getInstance = function (id) {
-          //return this.instances[id]
           return new Promise((resolve, reject) => {
             client.get(id, (err, cached) => {
               if (err || !cached) {
@@ -148,9 +77,98 @@ module.exports.new = () => {
                   reject(err)
                 })
               } else {
+                console.log('INSTANCIA ENCONTRADA')
                 resolve(cached.item)
               }
             })
+          })
+        }
+
+        Flow.prototype.searchNextState = function (stateName) {
+          return new Promise((resolve, reject) => {
+            this.model.states.forEach((state) => {
+              if (state.name === stateName) {
+                return resolve(state)
+              }
+            })
+            return reject(new Error('No default state found'))
+          })
+        }
+
+        Flow.prototype.validateTransition = function (instance, transitionName) {
+          return new Promise((resolve, reject) => {
+            if (instance.actualState.transitions) {
+              instance.actualState.transitions.forEach((transition) => {
+                if (Utils.matchRule(transition.name, transitionName) || Utils.matchRegExp(transition.name, transitionName)) {
+                  return resolve(transition)
+                }
+              })
+              return reject(new Error('No se pudo encontrar el estado en las transiciones'))
+            } else {
+              return reject(new Error('No se pudo encontrar el estado en las transiciones'))
+            }
+          })
+        }
+
+        Flow.prototype.getState = function (instance, data) {
+          return new Promise((resolve, reject) => {
+            if (data && data.action) {
+              this.validateTransition(instance, data.action).then((transition) => {
+                this.searchNextState(transition.to).then((nextState) => {
+                  if (transition.use) {
+                    instance.middlewares[transition.use](instance.actualState, (data) => {
+                      instance.actualState = nextState
+
+                      client.set(instance.id, instance, this.model.ttl, (err) => {
+                        if (err) {
+                          reject(err)
+                        }
+                        if (instance.actualState.onEnter) {
+                          if (instance.actualState.onEnter.emit) {
+                            instance.internalEmitter.emit(instance.actualState.onEnter.emit, instance.actualState.onEnter.data)
+                          }
+                        }
+                        resolve(instance.actualState)
+                      })
+                    })
+                  } else {
+                    instance.actualState = nextState
+                    client.set(instance.id, instance, this.model.ttl, (err) => {
+                      console.log('EL NUEVO ESTADO ' + JSON.stringify(instance))
+                      if (err) {
+                        reject(err)
+                      }
+                      if (instance.actualState.onEnter) {
+                        if (instance.actualState.onEnter.emit) {
+                          instance.internalEmitter.emit(instance.actualState.onEnter.emit, instance.actualState.onEnter.data)
+                        }
+                      }
+                      resolve(instance.actualState)
+                    })
+
+                  }
+                })
+              }).catch((err) => {
+                this.searchNextState('default').then((nextState) => {
+                  instance.actualState = nextState
+                  client.set(instance.id, instance, this.model.ttl, (err) => {
+                    if (err) {
+                      reject(err)
+                    }
+                    if (instance.actualState.onEnter) {
+                      if (instance.actualState.onEnter.emit) {
+                        instance.internalEmitter.emit(instance.actualState.onEnter.emit, instance.actualState.onEnter.data)
+                      }
+                    }
+                    resolve(instance.actualState)
+                  })
+                }).catch((err) => {
+                  return resolve({ template: err })
+                })
+              })
+            } else {
+              return resolve(instance.actualState)
+            }
           })
         }
 

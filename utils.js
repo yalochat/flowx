@@ -20,10 +20,10 @@ module.exports.matchRegExp = (rule, test) => {
   const ruleArray = rule.split('/')
   let exp = {}
   console.log(JSON.stringify(ruleArray))
-  if (ruleArray.length > 2) {
+  if (ruleArray.length > 1) {
     exp = new RegExp(ruleArray[1], ruleArray[2])
   } else {
-    exp = new RegExp(ruleArray[1])
+    exp = new RegExp(ruleArray[0])
   }
   return exp.test(test)
 }

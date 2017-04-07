@@ -172,6 +172,17 @@ module.exports.new = () => {
           })
         }
 
+        Flow.prototype.saveInstance = function (instance) {
+          return new Promise((resolve, reject) => {
+            client.set(instance.id, instance, this.model.ttl, (err) => {
+              if (err) {
+                reject(err)
+              }
+              resolve(instance)
+            })
+          })
+        }
+
         Flow.prototype.on = function (eventName, eventFunction) {
           this.internalEmitter.on(eventName, eventFunction)
         }

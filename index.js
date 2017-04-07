@@ -84,10 +84,10 @@ module.exports.new = () => {
           })
         }
 
-        Flow.prototype.searchNextState = function (stateName) {
+        Flow.prototype.searchNextState = function (stateName, global) {
           return new Promise((resolve, reject) => {
             this.model.states.forEach((state) => {
-              if (state.name === stateName) {
+              if (state.name === stateName && global === state.global) {
                 return resolve(state)
               }
             })
@@ -103,9 +103,11 @@ module.exports.new = () => {
                   return resolve(transition)
                 }
               })
-              return reject(new Error('No se pudo encontrar el estado en las transiciones'))
+              console.log('No se pudo encontrar el estado en las transiciones')
+              return resolve(transitionName)
             } else {
-              return reject(new Error('No se pudo encontrar el estado en las transiciones'))
+              console.log('No se pudo encontrar el estado en las transiciones')
+              return resolve(transitionName)
             }
           })
         }
@@ -114,7 +116,7 @@ module.exports.new = () => {
           return new Promise((resolve, reject) => {
             if (data && data.action) {
               this.validateTransition(instance, data.action).then((transition) => {
-                this.searchNextState(transition.to).then((nextState) => {
+                this.searchNextState(transition.to || transition, transition.to === undefined).then((nextState) => {
                   if (transition.use) {
                     instance.middlewares[transition.use](instance.currentState, (data) => {
                       instance.currentState = nextState
@@ -147,28 +149,34 @@ module.exports.new = () => {
                     })
 
                   }
+                }).catch((err) => {
+                  this.goToDefault(instance)
                 })
               }).catch((err) => {
-                this.searchNextState('default').then((nextState) => {
-                  instance.currentState = nextState
-                  client.set(instance.id, instance, this.model.ttl, (err) => {
-                    if (err) {
-                      reject(err)
-                    }
-                    if (instance.currentState.onEnter) {
-                      if (instance.currentState.onEnter.emit) {
-                        instance.internalEmitter.emit(instance.currentState.onEnter.emit, instance.currentState.onEnter.data)
-                      }
-                    }
-                    resolve(instance.currentState)
-                  })
-                }).catch((err) => {
-                  return resolve({ template: err })
-                })
+                this.goToDefault(instance)
               })
             } else {
               return resolve(instance.currentState)
             }
+          })
+        }
+
+        Flow.prototype.goToDefault = function (instance) {
+          this.searchNextState('default').then((nextState) => {
+            instance.currentState = nextState
+            client.set(instance.id, instance, this.model.ttl, (err) => {
+              if (err) {
+                reject(err)
+              }
+              if (instance.currentState.onEnter) {
+                if (instance.currentState.onEnter.emit) {
+                  instance.internalEmitter.emit(instance.currentState.onEnter.emit, instance.currentState.onEnter.data)
+                }
+              }
+              resolve(instance.currentState)
+            })
+          }).catch((err) => {
+            return resolve({ template: err })
           })
         }
 

@@ -24,7 +24,7 @@ module.exports.new = () => {
 
         function Instance(id, emitter, middlewares, initState) {
           this.id = id
-          this.actualState = initState
+          this.currentState = initState
           this.middlewares = []
           this.internalEmitter = emitter
           this.middlewares = middlewares
@@ -97,9 +97,9 @@ module.exports.new = () => {
 
         Flow.prototype.validateTransition = function (instance, transitionName) {
           return new Promise((resolve, reject) => {
-            if (instance.actualState.transitions) {
-              instance.actualState.transitions.forEach((transition) => {
-                if (Utils.matchRule(transition.name, transitionName) || Utils.matchRegExp(transition.name, transitionName)) {
+            if (instance.currentState.transitions) {
+              instance.currentState.transitions.forEach((transition) => {
+                if (Utils.matchRule(transition.when, transitionName) || Utils.matchRegExp(transition.when, transitionName)) {
                   return resolve(transition)
                 }
               })
@@ -116,58 +116,58 @@ module.exports.new = () => {
               this.validateTransition(instance, data.action).then((transition) => {
                 this.searchNextState(transition.to).then((nextState) => {
                   if (transition.use) {
-                    instance.middlewares[transition.use](instance.actualState, (data) => {
-                      instance.actualState = nextState
+                    instance.middlewares[transition.use](instance.currentState, (data) => {
+                      instance.currentState = nextState
 
                       client.set(instance.id, instance, this.model.ttl, (err) => {
                         if (err) {
                           reject(err)
                         }
-                        if (instance.actualState.onEnter) {
-                          if (instance.actualState.onEnter.emit) {
-                            instance.internalEmitter.emit(instance.actualState.onEnter.emit, instance.actualState.onEnter.data)
+                        if (instance.currentState.onEnter) {
+                          if (instance.currentState.onEnter.emit) {
+                            instance.internalEmitter.emit(instance.currentState.onEnter.emit, instance.currentState.onEnter.data)
                           }
                         }
-                        resolve(instance.actualState)
+                        resolve(instance.currentState)
                       })
                     })
                   } else {
-                    instance.actualState = nextState
+                    instance.currentState = nextState
                     client.set(instance.id, instance, this.model.ttl, (err) => {
                       console.log('EL NUEVO ESTADO ' + JSON.stringify(instance))
                       if (err) {
                         reject(err)
                       }
-                      if (instance.actualState.onEnter) {
-                        if (instance.actualState.onEnter.emit) {
-                          instance.internalEmitter.emit(instance.actualState.onEnter.emit, instance.actualState.onEnter.data)
+                      if (instance.currentState.onEnter) {
+                        if (instance.currentState.onEnter.emit) {
+                          instance.internalEmitter.emit(instance.currentState.onEnter.emit, instance.currentState.onEnter.data)
                         }
                       }
-                      resolve(instance.actualState)
+                      resolve(instance.currentState)
                     })
 
                   }
                 })
               }).catch((err) => {
                 this.searchNextState('default').then((nextState) => {
-                  instance.actualState = nextState
+                  instance.currentState = nextState
                   client.set(instance.id, instance, this.model.ttl, (err) => {
                     if (err) {
                       reject(err)
                     }
-                    if (instance.actualState.onEnter) {
-                      if (instance.actualState.onEnter.emit) {
-                        instance.internalEmitter.emit(instance.actualState.onEnter.emit, instance.actualState.onEnter.data)
+                    if (instance.currentState.onEnter) {
+                      if (instance.currentState.onEnter.emit) {
+                        instance.internalEmitter.emit(instance.currentState.onEnter.emit, instance.currentState.onEnter.data)
                       }
                     }
-                    resolve(instance.actualState)
+                    resolve(instance.currentState)
                   })
                 }).catch((err) => {
                   return resolve({ template: err })
                 })
               })
             } else {
-              return resolve(instance.actualState)
+              return resolve(instance.currentState)
             }
           })
         }

@@ -86,11 +86,11 @@ module.exports.new = () => {
 
         Flow.prototype.searchNextState = function (stateName, global) {
           return new Promise((resolve, reject) => {
-            this.model.states.forEach((state) => {
-              if (state.name === stateName && global === state.global) {
-                return resolve(state)
+            for (var i = 0; i < this.model.states.length; i++) {
+              if (this.model.states[i].name === stateName && (global === false || this.model.states[i].global)) {
+                return resolve(this.model.states[i])
               }
-            })
+            }
             return reject(new Error('No default state found'))
           })
         }
@@ -98,15 +98,15 @@ module.exports.new = () => {
         Flow.prototype.validateTransition = function (instance, transitionName) {
           return new Promise((resolve, reject) => {
             if (instance.currentState.transitions) {
-              instance.currentState.transitions.forEach((transition) => {
-                if (Utils.matchRule(transition.when, transitionName) || Utils.matchRegExp(transition.when, transitionName)) {
-                  return resolve(transition)
+              for (var i = 0; i < instance.currentState.transitions.length; i++) {
+                if (Utils.matchRule(instance.currentState.transitions[i].when, transitionName) || Utils.matchRegExp(instance.currentState.transitions[i].when, transitionName)) {
+                  return resolve(instance.currentState.transitions[i])
                 }
-              })
+              }
               console.log('No se pudo encontrar el estado en las transiciones')
               return resolve(transitionName)
             } else {
-              console.log('No se pudo encontrar el estado en las transiciones')
+              console.log('No se pudo encontrar ninguna transición')
               return resolve(transitionName)
             }
           })
@@ -150,10 +150,16 @@ module.exports.new = () => {
 
                   }
                 }).catch((err) => {
-                  this.goToDefault(instance)
+                  console.log(err)
+                  this.goToDefault(instance).then((state) => {
+                    return resolve(state)
+                  })
                 })
               }).catch((err) => {
-                this.goToDefault(instance)
+                console.log(err)
+                this.goToDefault(instance).then((state) => {
+                  return resolve(state)
+                })
               })
             } else {
               return resolve(instance.currentState)
@@ -162,21 +168,23 @@ module.exports.new = () => {
         }
 
         Flow.prototype.goToDefault = function (instance) {
-          this.searchNextState('default').then((nextState) => {
-            instance.currentState = nextState
-            client.set(instance.id, instance, this.model.ttl, (err) => {
-              if (err) {
-                reject(err)
-              }
-              if (instance.currentState.onEnter) {
-                if (instance.currentState.onEnter.emit) {
-                  instance.internalEmitter.emit(instance.currentState.onEnter.emit, instance.currentState.onEnter.data)
+          return new Promise((resolve, reject) => {
+            this.searchNextState('default').then((nextState) => {
+              instance.currentState = nextState
+              client.set(instance.id, instance, this.model.ttl, (err) => {
+                if (err) {
+                  reject(err)
                 }
-              }
-              resolve(instance.currentState)
+                if (instance.currentState.onEnter) {
+                  if (instance.currentState.onEnter.emit) {
+                    instance.internalEmitter.emit(instance.currentState.onEnter.emit, instance.currentState.onEnter.data)
+                  }
+                }
+                resolve(instance.currentState)
+              })
+            }).catch((err) => {
+              return resolve({ template: err })
             })
-          }).catch((err) => {
-            return resolve({ template: err })
           })
         }
 

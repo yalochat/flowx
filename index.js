@@ -150,13 +150,11 @@ module.exports.new = () => {
 
                   }
                 }).catch((err) => {
-                  console.log(err)
                   this.goToDefault(instance).then((state) => {
                     return resolve(state)
                   })
                 })
               }).catch((err) => {
-                console.log(err)
                 this.goToDefault(instance).then((state) => {
                   return resolve(state)
                 })
@@ -169,7 +167,7 @@ module.exports.new = () => {
 
         Flow.prototype.goToDefault = function (instance) {
           return new Promise((resolve, reject) => {
-            this.searchNextState('default').then((nextState) => {
+            this.searchNextState('default', false).then((nextState) => {
               instance.currentState = nextState
               client.set(instance.id, instance, this.model.ttl, (err) => {
                 if (err) {

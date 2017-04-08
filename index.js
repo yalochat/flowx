@@ -91,7 +91,7 @@ module.exports.new = () => {
                 return resolve(this.model.states[i])
               }
             }
-            return reject(new Error('No default state found'))
+            return reject(new Error(`State ${stateName} not found!`))
           })
         }
 

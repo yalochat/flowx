@@ -2,18 +2,22 @@
 
 module.exports.matchRule = (rule, test, separator) => {
   const ruleArray = rule.split(separator || '.')
-  const testArray = test.split(separator || '.')
+  if (ruleArray.length > 1) {
+    const testArray = test.split(separator || '.')
 
-  if (ruleArray.length !== testArray.length) {
-    return false;
-  }
-
-  for (var i = 0; i < ruleArray.length; i++) {
-    if (ruleArray[i] !== testArray[i] && ruleArray[i] !== '*') {
-      return false
+    if (ruleArray.length !== testArray.length) {
+      return false;
     }
+
+    for (var i = 0; i < ruleArray.length; i++) {
+      if (ruleArray[i] !== testArray[i] && ruleArray[i] !== '*') {
+        return false
+      }
+    }
+    return true
+  } else {
+    return rule === test || rule === '*'
   }
-  return true
 }
 
 module.exports.matchRegExp = (rule, test) => {

@@ -1,6 +1,7 @@
 'use strict'
+const _ = require('lodash')
 const Promise = require('bluebird')
-const EventEmitter = require('events');
+const EventEmitter = require('events')
 const Utils = require('./utils')
 const Catbox = require('catbox')
 const CatboxMemory = require('catbox-memory')
@@ -45,7 +46,7 @@ module.exports.new = () => {
 
         Flow.prototype.newInstance = function (id) {
           return new Promise((resolve, reject) => {
-            const newState = Object.assign({}, this.model.states[INITIAL_STATE])
+            const newState = _.cloneDeep(this.model.states[INITIAL_STATE])
             const newInstance = new externals.Instance(id, this.internalEmitter, this.middlewares, newState)
             console.log('CREANDO NUEVA INSTANCIA ' + JSON.stringify(newInstance))
             client.set(id, newInstance, this.model.ttl, (err) => {
@@ -89,7 +90,7 @@ module.exports.new = () => {
           return new Promise((resolve, reject) => {
             for (var i = 0; i < this.model.states.length; i++) {
               if (this.model.states[i].name === stateName && (global === false || this.model.states[i].global)) {
-                const newState = Object.assign({}, this.model.states[i])
+                const newState = _.cloneDeep(this.model.states[i])
                 return resolve(newState)
               }
             }

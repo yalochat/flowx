@@ -45,7 +45,8 @@ module.exports.new = () => {
 
         Flow.prototype.newInstance = function (id) {
           return new Promise((resolve, reject) => {
-            var newInstance = new externals.Instance(id, this.internalEmitter, this.middlewares, this.model.states[INITIAL_STATE])
+            const newState = Object.assign({}, this.model.states[INITIAL_STATE])
+            const newInstance = new externals.Instance(id, this.internalEmitter, this.middlewares, newState)
             console.log('CREANDO NUEVA INSTANCIA ' + JSON.stringify(newInstance))
             client.set(id, newInstance, this.model.ttl, (err) => {
               if (err) {
@@ -88,7 +89,8 @@ module.exports.new = () => {
           return new Promise((resolve, reject) => {
             for (var i = 0; i < this.model.states.length; i++) {
               if (this.model.states[i].name === stateName && (global === false || this.model.states[i].global)) {
-                return resolve(this.model.states[i])
+                const newState = Object.assign({}, this.model.states[i])
+                return resolve(newState)
               }
             }
             return reject(new Error(`State ${stateName} not found!`))

@@ -79,7 +79,7 @@ module.exports.new = () => {
                   reject(err)
                 })
               } else {
-                console.log('INSTANCIA ENCONTRADA ' + JSON.stringify(cached.item))
+                console.log('Instance found ' + JSON.stringify(cached.item))
                 resolve(cached.item)
               }
             })
@@ -139,7 +139,7 @@ module.exports.new = () => {
                   } else {
                     instance.currentState = nextState
                     client.set(instance.id, instance, this.model.ttl, (err) => {
-                      console.log('EL NUEVO ESTADO ' + JSON.stringify(instance))
+                      console.log('New state: ' + JSON.stringify(instance))
                       if (err) {
                         reject(err)
                       }

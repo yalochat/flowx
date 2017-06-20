@@ -1,6 +1,7 @@
 'use strict'
+const _ = require('lodash')
 const Promise = require('bluebird')
-const EventEmitter = require('events');
+const EventEmitter = require('events')
 const Utils = require('./utils')
 const Catbox = require('catbox')
 const CatboxMemory = require('catbox-memory')
@@ -45,8 +46,9 @@ module.exports.new = () => {
 
         Flow.prototype.newInstance = function (id) {
           return new Promise((resolve, reject) => {
-            var newInstance = new externals.Instance(id, this.internalEmitter, this.middlewares, this.model.states[INITIAL_STATE])
-            console.log('CREANDO NUEVA INSTANCIA ' + JSON.stringify(newInstance))
+            const newState = _.cloneDeep(this.model.states[INITIAL_STATE])
+            const newInstance = new externals.Instance(id, this.internalEmitter, this.middlewares, newState)
+            console.log('Creating new instance ' + JSON.stringify(newInstance))
             client.set(id, newInstance, this.model.ttl, (err) => {
               if (err) {
                 reject(err)
@@ -77,7 +79,7 @@ module.exports.new = () => {
                   reject(err)
                 })
               } else {
-                console.log('INSTANCIA ENCONTRADA ' + JSON.stringify(cached.item))
+                console.log('Instance found ' + JSON.stringify(cached.item))
                 resolve(cached.item)
               }
             })
@@ -88,7 +90,8 @@ module.exports.new = () => {
           return new Promise((resolve, reject) => {
             for (var i = 0; i < this.model.states.length; i++) {
               if (this.model.states[i].name === stateName && (global === false || this.model.states[i].global)) {
-                return resolve(this.model.states[i])
+                const newState = _.cloneDeep(this.model.states[i])
+                return resolve(newState)
               }
             }
             return reject(new Error(`State ${stateName} not found!`))
@@ -103,10 +106,10 @@ module.exports.new = () => {
                   return resolve(instance.currentState.transitions[i])
                 }
               }
-              console.log('No se pudo encontrar el estado en las transiciones')
+              console.log('State not found')
               return resolve(transitionName)
             } else {
-              console.log('No se pudo encontrar ninguna transición')
+              console.log('Transition not found')
               return resolve(transitionName)
             }
           })
@@ -136,7 +139,7 @@ module.exports.new = () => {
                   } else {
                     instance.currentState = nextState
                     client.set(instance.id, instance, this.model.ttl, (err) => {
-                      console.log('EL NUEVO ESTADO ' + JSON.stringify(instance))
+                      console.log('New state: ' + JSON.stringify(instance))
                       if (err) {
                         reject(err)
                       }

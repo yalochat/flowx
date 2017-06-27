@@ -4,7 +4,7 @@ const Promise = require('bluebird')
 const EventEmitter = require('events')
 const Utils = require('./utils')
 const Catbox = require('catbox')
-const CatboxMemory = require('catbox-memory')
+const CatboxRethinkdb = require('catbox-rethinkdb')
 
 let externals = {}
 
@@ -12,7 +12,14 @@ class flowEmitter extends EventEmitter { }
 
 const INITIAL_STATE = 0
 
-const client = new Catbox.Client(CatboxMemory)
+const catboxOptions = {
+  host: process.env.RETHINKDB_HOST || 'rethinkdb',
+  port: process.env.RETHINKDB_PORT || 28015,
+  db: process.env.RETHINKDB_DB || 'flowx-db',
+  table: process.env.RETHINKDB_FLOWXTABLE || 'flowx-table'
+}
+
+const client = new Catbox.Client(CatboxRethinkdb, catboxOptions)
 
 module.exports.new = () => {
   return new Promise((resolve, reject) => {

@@ -225,7 +225,7 @@ module.exports.new = () => {
         Flow.prototype.getInstancesBySegment = function (segment) {
           return new Promise((resolve, reject) => {
             r.table(tableName).filter({
-              values: {
+              value: {
                 id: {
                   segment: segment
                 }

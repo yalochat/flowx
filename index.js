@@ -238,6 +238,16 @@ module.exports.new = () => {
           })
         }
 
+        Flow.prototype.findInstances = function (filter) {
+          return new Promise((resolve, reject) => {
+            r.table(tableName).filter(filter).run().then(instances => {
+              return resolve(instances)
+            }).catch(error => {
+              return reject(error)
+            })
+          })
+        }
+
         return Flow
 
       })()

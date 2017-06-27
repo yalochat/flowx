@@ -6,17 +6,24 @@ const Utils = require('./utils')
 const Catbox = require('catbox')
 const CatboxRethinkdb = require('catbox-rethinkdb')
 
+const r = require('rethinkdbdash')({
+  host: process.env.RETHINKDB_HOST || 'rethinkdb',
+  db: process.env.RETHINKDB_DB || 'flowxdb',
+});
+
 let externals = {}
 
 class flowEmitter extends EventEmitter { }
 
 const INITIAL_STATE = 0
 
+const tableName = process.env.RETHINKDB_FLOWXTABLE || 'flowxtable'
+
 const catboxOptions = {
   host: process.env.RETHINKDB_HOST || 'rethinkdb',
   port: process.env.RETHINKDB_PORT || 28015,
-  db: process.env.RETHINKDB_DB || 'flowx-db',
-  table: process.env.RETHINKDB_FLOWXTABLE || 'flowx-table'
+  db: process.env.RETHINKDB_DB || 'flowxdb',
+  table: tableName
 }
 
 const client = new Catbox.Client(CatboxRethinkdb, catboxOptions)
@@ -213,6 +220,22 @@ module.exports.new = () => {
 
         Flow.prototype.register = function (name, fn) {
           this.middlewares[name] = fn
+        }
+
+        Flow.prototype.getInstancesBySegment = function (segment) {
+          return new Promise((resolve, reject) => {
+            r.table(tableName).filter({
+              values: {
+                id: {
+                  segment: segment
+                }
+              }
+            }).run().then(instances => {
+              return resolve(instances)
+            }).catch(error => {
+              return reject(error)
+            })
+          })
         }
 
         return Flow

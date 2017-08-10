@@ -55,7 +55,7 @@ module.exports.new = () => {
           this.model = model
           this.instances = []
           this.middlewares = []
-          this.internalEmitter = new flowEmitter();
+          this.internalEmitter = {}
         }
 
         Flow.prototype.newInstance = function (id) {

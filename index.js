@@ -2,7 +2,8 @@
 const _ = require('lodash')
 const Promise = require('bluebird')
 const EventEmitter = require('events')
-const Utils = require('./utils')
+const Matchers = require('./lib/matchers')
+const Utils = require('./lib/utils')
 const Catbox = require('catbox')
 const CatboxRethinkdb = require('catbox-rethinkdb')
 
@@ -12,8 +13,6 @@ const r = require('rethinkdbdash')({
 });
 
 let externals = {}
-
-class flowEmitter extends EventEmitter { }
 
 const INITIAL_STATE = 0
 
@@ -37,11 +36,10 @@ module.exports.new = () => {
 
       externals.Instance = (function () {
 
-        function Instance(id, emitter, middlewares, initState) {
+        function Instance(id, middlewares, initState) {
           this.id = id
           this.currentState = initState
           this.middlewares = []
-          this.internalEmitter = emitter
           this.middlewares = middlewares
         }
 
@@ -52,16 +50,18 @@ module.exports.new = () => {
 
         function Flow(name, model) {
           this.name = name
-          this.model = model
           this.instances = []
           this.middlewares = []
           this.internalEmitter = {}
+
+          //Load globalTransitions and sort all transitions
+          this.model = Utils.prepareModel(model)
         }
 
         Flow.prototype.newInstance = function (id) {
           return new Promise((resolve, reject) => {
             const newState = _.cloneDeep(this.model.states[INITIAL_STATE])
-            const newInstance = new externals.Instance(id, this.internalEmitter, this.middlewares, newState)
+            const newInstance = new externals.Instance(id, this.middlewares, newState)
             console.log('Creating new instance ' + JSON.stringify(newInstance))
             client.set(id, newInstance, this.model.ttl, (err) => {
               if (err) {
@@ -93,7 +93,7 @@ module.exports.new = () => {
                   reject(err)
                 })
               } else {
-                console.log('Instance found ' + JSON.stringify(cached.item))
+                console.log(`Instance found: ${JSON.stringify(cached.item)}`)
                 resolve(cached.item)
               }
             })
@@ -108,7 +108,7 @@ module.exports.new = () => {
                 return resolve(newState)
               }
             }
-            return reject(new Error(`State ${stateName} not found!`))
+            return reject(new Error(`State: ${stateName} => not found!`))
           })
         }
 
@@ -116,14 +116,18 @@ module.exports.new = () => {
           return new Promise((resolve, reject) => {
             if (instance.currentState.transitions) {
               for (var i = 0; i < instance.currentState.transitions.length; i++) {
-                if (Utils.matchRule(instance.currentState.transitions[i].when, transitionName) || Utils.matchRegExp(instance.currentState.transitions[i].when, transitionName)) {
+                if (
+                    Matchers.matchRule(instance.currentState.transitions[i].when, transitionName) ||
+                    Matchers.matchRegExp(instance.currentState.transitions[i].when, transitionName) ||
+                    Matchers.matchAll(instance.currentState.transitions[i].when)
+                ) {
                   return resolve(instance.currentState.transitions[i])
                 }
               }
-              console.log('State not found')
+              console.log(`Transition not found, searching for global state: ${transitionName}`)
               return resolve(transitionName)
             } else {
-              console.log('Transition not found')
+              console.log(`Transitions not found, searching for global state: ${transitionName}`)
               return resolve(transitionName)
             }
           })
@@ -144,7 +148,7 @@ module.exports.new = () => {
                         }
                         if (instance.currentState.onEnter) {
                           if (instance.currentState.onEnter.emit) {
-                            instance.internalEmitter.emit(instance.currentState.onEnter.emit, instance.currentState.onEnter.data)
+                            this.internalEmitter.emit(instance.currentState.onEnter.emit, instance.currentState.onEnter.data)
                           }
                         }
                         resolve(instance.currentState)
@@ -153,13 +157,13 @@ module.exports.new = () => {
                   } else {
                     instance.currentState = nextState
                     client.set(instance.id, instance, this.model.ttl, (err) => {
-                      console.log('New state: ' + JSON.stringify(instance))
+                      console.log(`New state: ${JSON.stringify(instance)}`)
                       if (err) {
                         reject(err)
                       }
                       if (instance.currentState.onEnter) {
                         if (instance.currentState.onEnter.emit) {
-                          instance.internalEmitter.emit(instance.currentState.onEnter.emit, instance.currentState.onEnter.data)
+                          this.internalEmitter.emit(instance.currentState.onEnter.emit, instance.currentState.onEnter.data)
                         }
                       }
                       resolve(instance.currentState)
@@ -192,7 +196,7 @@ module.exports.new = () => {
                 }
                 if (instance.currentState.onEnter) {
                   if (instance.currentState.onEnter.emit) {
-                    instance.internalEmitter.emit(instance.currentState.onEnter.emit, instance.currentState.onEnter.data)
+                    this.internalEmitter.emit(instance.currentState.onEnter.emit, instance.currentState.onEnter.data)
                   }
                 }
                 resolve(instance.currentState)

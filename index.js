@@ -111,18 +111,15 @@ module.exports.new = () => {
         validateTransition (instance, transitionName) {
           return new Promise((resolve, reject) => {
             if (instance.currentState.transitions) {
-              // _.forEach(instance.currentState.transitions, (transition) => {
               for (var i = 0; i < instance.currentState.transitions.length; i++) {
                 if (
                   Matchers.matchRule(instance.currentState.transitions[i].when, transitionName) ||
                   Matchers.matchRegExp(instance.currentState.transitions[i].when, transitionName) ||
                   Matchers.matchAll(instance.currentState.transitions[i].when)
                 ) {
-                  // console.log(`Resolving %j`, instance.currentState.transitions[i])
                   return resolve(instance.currentState.transitions[i])
                 }
               }
-              // })
               console.log(`Transition not found, searching for global state: ${transitionName}`)
               return resolve(transitionName)
             } else {

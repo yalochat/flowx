@@ -108,23 +108,21 @@ module.exports.new = () => {
           })
         }
 
-        validateTransition (instance, transitionName) {
+        validateTransition (instance, action) {
           return new Promise((resolve, reject) => {
             if (instance.currentState.transitions) {
               for (var i = 0; i < instance.currentState.transitions.length; i++) {
-                if (
-                  Matchers.matchRule(instance.currentState.transitions[i].when, transitionName) ||
-                  Matchers.matchRegExp(instance.currentState.transitions[i].when, transitionName) ||
-                  Matchers.matchAll(instance.currentState.transitions[i].when)
-                ) {
+                if (Array.isArray(action) && Matchers.matchList(instance.currentState.transitions[i], action)) {
+                  return resolve(instance.currentState.transitions[i])
+                } else if (Matchers.matchOne(instance.currentState.transitions[i].when, action)) {
                   return resolve(instance.currentState.transitions[i])
                 }
               }
-              console.log(`Transition not found, searching for global state: ${transitionName}`)
-              return resolve(transitionName)
+              console.log(`Transition not found, searching for global state: ${action}`)
+              return resolve(action)
             } else {
-              console.log(`Transitions not found, searching for global state: ${transitionName}`)
-              return resolve(transitionName)
+              console.log(`Transitions not found, searching for global state: ${action}`)
+              return resolve(action)
             }
           })
         }

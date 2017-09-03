@@ -67,7 +67,7 @@ const data = {
   ]
 }
 
-const preparedData = Util.prepareModel(data)
+const preparedData = Util.prepareModel(data).states.toJS()
 
 test('Get current state without action', (done) => {
   Flowx.new().then((flowxServer) => {
@@ -78,7 +78,7 @@ test('Get current state without action', (done) => {
     }
     flow.getInstance(key).then((bot) => {
       flow.getState(bot, {}).then((state) => {
-        expect(state).toEqual(preparedData.states[0])
+        expect(state).toEqual(preparedData[0])
         done()
       })
     })
@@ -94,7 +94,7 @@ test('Get state with action', (done) => {
     }
     flow.getInstance(key).then((bot) => {
       flow.getState(bot, { action: 'toState2' }).then((state) => {
-        expect(state).toEqual(preparedData.states[1])
+        expect(state).toEqual(preparedData[1])
         done()
       })
     })
@@ -110,7 +110,7 @@ test('Get state with action regExp', (done) => {
     }
     flow.getInstance(key).then((bot) => {
       flow.getState(bot, { action: '3' }).then((state) => {
-        expect(state).toEqual(preparedData.states[2])
+        expect(state).toEqual(preparedData[2])
         done()
       })
     })
@@ -126,7 +126,7 @@ test('Get state with action wildcard', (done) => {
     }
     flow.getInstance(key).then((bot) => {
       flow.getState(bot, { action: 'abc' }).then((state) => {
-        expect(state).toEqual(preparedData.states[0])
+        expect(state).toEqual(preparedData[0])
         done()
       })
     })
@@ -142,7 +142,7 @@ test('Get global state', (done) => {
     }
     flow.getInstance(key).then((bot) => {
       flow.getState(bot, { action: 'globalState' }).then((state) => {
-        expect(state).toEqual(preparedData.states[3])
+        expect(state).toEqual(preparedData[3])
         done()
       })
     })
@@ -158,7 +158,7 @@ test('Get default state', (done) => {
     }
     flow.getInstance(key).then((bot) => {
       flow.getState(bot, { action: 'test' }).then((state) => {
-        expect(state).toEqual(preparedData.states[4])
+        expect(state).toEqual(preparedData[4])
         done()
       })
     })
@@ -174,7 +174,7 @@ test('Get state using global transition', (done) => {
     }
     flow.getInstance(key).then((bot) => {
       flow.getState(bot, { action: 'toState1' }).then((state) => {
-        expect(state).toEqual(preparedData.states[0])
+        expect(state).toEqual(preparedData[0])
         done()
       })
     })

@@ -38,6 +38,11 @@ const data = {
         {
           when: '/\\d/i',
           to: 'state3'
+        },
+        {
+          when: 'init',
+          to: 'state4',
+          type: 'user'
         }
       ]
     },
@@ -71,6 +76,15 @@ const data = {
         {
           when: 'toState2',
           to: 'state2'
+        }
+      ]
+    },
+    {
+      name: 'state4',
+      transitions: [
+        {
+          when: 'toState1',
+          to: 'state1'
         }
       ]
     }
@@ -229,6 +243,28 @@ test('Get state with actions array without type', (done) => {
       ]
       flow.getState(bot, { action: actions }).then((state) => {
         expect(state).toEqual(preparedData[1])
+        done()
+      })
+    })
+  })
+})
+
+test('Get state with actions array with type without confidence', (done) => {
+  Flowx.new().then((flowxServer) => {
+    const flow = new flowxServer.Flow('myFlow', data)
+    const key = {
+      id: '111',
+      segment: 'test'
+    }
+    flow.getInstance(key).then((bot) => {
+      const actions = [
+        {
+          value: 'init',
+          type: 'user'
+        }
+      ]
+      flow.getState(bot, { action: actions }).then((state) => {
+        expect(state).toEqual(preparedData[5])
         done()
       })
     })

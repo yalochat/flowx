@@ -19,6 +19,12 @@ const data = {
         {
           when: 'toState2',
           to: 'state2'
+        },
+        {
+          when: 'toState3',
+          to: 'state3',
+          type: 'test',
+          confidence: 0.5
         }
       ]
     },
@@ -38,6 +44,10 @@ const data = {
     {
       name: 'state3',
       transitions: [
+        {
+          when: 'toState2',
+          to: 'state2'
+        },
         {
           when: '*',
           to: 'state1'
@@ -175,6 +185,50 @@ test('Get state using global transition', (done) => {
     flow.getInstance(key).then((bot) => {
       flow.getState(bot, { action: 'toState1' }).then((state) => {
         expect(state).toEqual(preparedData[0])
+        done()
+      })
+    })
+  })
+})
+
+test('Get state with condifence', (done) => {
+  Flowx.new().then((flowxServer) => {
+    const flow = new flowxServer.Flow('myFlow', data)
+    const key = {
+      id: '111',
+      segment: 'test'
+    }
+    flow.getInstance(key).then((bot) => {
+      const actions = [
+        {
+          type: 'test',
+          value: 'toState3',
+          confidence: 0.6
+        }
+      ]
+      flow.getState(bot, { action: actions }).then((state) => {
+        expect(state).toEqual(preparedData[2])
+        done()
+      })
+    })
+  })
+})
+
+test('Get state with actions array without type', (done) => {
+  Flowx.new().then((flowxServer) => {
+    const flow = new flowxServer.Flow('myFlow', data)
+    const key = {
+      id: '111',
+      segment: 'test'
+    }
+    flow.getInstance(key).then((bot) => {
+      const actions = [
+        {
+          value: 'toState2'
+        }
+      ]
+      flow.getState(bot, { action: actions }).then((state) => {
+        expect(state).toEqual(preparedData[1])
         done()
       })
     })

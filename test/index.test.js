@@ -14,11 +14,12 @@ const data = {
   ],
   states: [
     {
+      id: 1,
       name: 'state1',
       transitions: [
         {
           when: 'toState2',
-          to: 'state2'
+          to: 2
         },
         {
           when: 'toState3',
@@ -29,11 +30,12 @@ const data = {
       ]
     },
     {
+      id: 2,
       name: 'state2',
       transitions: [
         {
           when: 'toState1',
-          to: 'state1'
+          to: 1
         },
         {
           when: '/\\d/i',
@@ -47,6 +49,7 @@ const data = {
       ]
     },
     {
+      id: 3,
       name: 'state3',
       transitions: [
         {
@@ -60,6 +63,7 @@ const data = {
       ]
     },
     {
+      id: 4,
       name: 'globalState',
       global: true,
       transitions: [
@@ -70,6 +74,7 @@ const data = {
       ]
     },
     {
+      id: 6,
       name: 'default',
       globalTransitions: true,
       transitions: [
@@ -80,6 +85,7 @@ const data = {
       ]
     },
     {
+      id: 5,
       name: 'state4',
       transitions: [
         {

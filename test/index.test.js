@@ -1,6 +1,6 @@
 // const fx = require('fixtures')
-// const nock = require('nock')
-// const sinon = require('sinon')
+const nock = require('nock')
+const sinon = require('sinon')
 
 const Flowx = require('../')
 const Util = require('../lib/utils')
@@ -98,38 +98,38 @@ const data = {
     }
   ]
 }
-console.log(data)
+
 const preparedData = Util.prepareModel(data).states.toJS()
 const watchdogBaseUri = process.env.WATCHDOG_BASE_URI
 
 let instance
 
-// const fakeRequestWatchdog = () => {
-//   nock(watchdogBaseUri)
-//     .get('/domains/test/intents/search?numIntents=3')
-//     .reply(200, {
-//       "domain": "test",
-//       "results": [
-//           {
-//               "classificationId": 3524063,
-//               "entities": [],
-//               "id": 4,
-//               "intents": [
-//                   {
-//                       "category": "buy-ticket",
-//                       "categoryDescription": "Compra de boleto",
-//                       "confidence": 0.6926555037498474
-//                   },
-//                   {
-//                       "category": "promo",
-//                       "categoryDescription": "Promociones",
-//                       "confidence": 0.26473885774612427
-//                   }
-//               ]
-//           }
-//       ]
-//   })
-// }
+const fakeRequestWatchdog = () => {
+  nock(watchdogBaseUri)
+    .get('/domains/test/intents/search?numIntents=3')
+    .reply(200, {
+      domain: 'test',
+      results: [
+        {
+          classificationId: 3524063,
+          entities: [],
+          id: 4,
+          intents: [
+            {
+              category: 'buy-ticket',
+              categoryDescription: 'Compra de boleto',
+              confidence: 0.6926555037498474,
+            },
+            {
+              category: 'promo',
+              categoryDescription: 'Promociones',
+              confidence: 0.26473885774612427,
+            },
+          ],
+        },
+      ],
+    })
+}
 
 beforeEach(() => (Flowx.new()
   .then((flowxServer) => {
@@ -175,7 +175,7 @@ test('Get state with action wildcard', () => {
   })
 })
 
-test.skip('Get global state', () => {
+test('Get global state', () => {
   const { flow, bot } = instance
   return flow.getState(bot, { action: 'globalState' }).then((state) => {
     expect(state.state).toEqual(preparedData[3])
@@ -235,17 +235,16 @@ test('Get state with actions array with type without confidence', () => {
   })
 })
 
-// test.skip('Get state with a watchdog transition', () => {
-//   fakeRequestWatchdog()
-//   const { flow, bot } = instance
-//   const actions = [
-//     {
-//       value: 'init',
-//       type: 'user',
-//     },
-//   ]
-//
-//   return flow.getState(bot, { action: actions }).then((state) => {
-//     expect(state.state).toEqual(preparedData[5])
-//   })
-// })
+test.skip('Get state with a watchdog transition', () => {
+  fakeRequestWatchdog()
+  const { flow, bot } = instance
+  const actions = [
+    {
+      value: 'toState2',
+    },
+  ]
+
+  return flow.getState(bot, { action: actions }).then((state) => {
+    expect(state.state).toEqual(preparedData[5])
+  })
+})

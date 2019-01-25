@@ -28,6 +28,10 @@ const data = {
           to: 'state3',
           type: 'test',
           confidence: 0.5
+        },
+        {
+          when: 'toState7',
+          to: 7
         }
       ]
     },

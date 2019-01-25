@@ -93,7 +93,39 @@ const data = {
         {
           when: 'toState1',
           to: 'state1'
+        },
+        {
+          when: 'toState7',
+          to: 7
         }
+      ]
+    },
+    {
+      id: 7,
+      name: 'state7',
+      transitions: [
+        {
+          when: 'promo',
+          to: 'state1',
+          type: 'watchdog',
+          confidence: 0.6,
+        },
+        {
+          when: 'buy-ticket',
+          to: 'state8',
+          type: 'watchdog',
+          confidence: 0.6,
+        },
+      ]
+    },
+    {
+      id: 8,
+      name: 'state8',
+      transitions: [
+        {
+          when: 'toState1',
+          to: 'state1',
+        },
       ]
     }
   ]
@@ -106,7 +138,7 @@ let instance
 
 const fakeRequestWatchdog = () => {
   nock(watchdogBaseUri)
-    .get('/domains/test/intents/search?numIntents=3')
+    .post('/domains/myFlow/intents/search?numIntents=3')
     .reply(200, {
       domain: 'test',
       results: [
@@ -117,12 +149,12 @@ const fakeRequestWatchdog = () => {
           intents: [
             {
               category: 'buy-ticket',
-              categoryDescription: 'Compra de boleto',
+              categoryDescription: 'Flight ticket sellings',
               confidence: 0.6926555037498474,
             },
             {
               category: 'promo',
-              categoryDescription: 'Promociones',
+              categoryDescription: 'Promotions',
               confidence: 0.26473885774612427,
             },
           ],
@@ -235,16 +267,25 @@ test('Get state with actions array with type without confidence', () => {
   })
 })
 
-test.skip('Get state with a watchdog transition', () => {
+test('Get state with a watchdog transition', () => {
   fakeRequestWatchdog()
   const { flow, bot } = instance
   const actions = [
     {
-      value: 'toState2',
+      value: 'I want to buy a flight ticket',
     },
   ]
 
-  return flow.getState(bot, { action: actions }).then((state) => {
-    expect(state.state).toEqual(preparedData[5])
-  })
+  console.log("BOT: %j", bot)
+
+  return flow.getState(bot, { action: 'toState7' })
+    .then((state) => {
+      expect(state.state).toEqual(preparedData[6])
+
+      const bot_new = Object.assign({}, bot, { currentState: state.state })
+      return flow.getState(bot_new, { action: actions })
+    })
+    .then((state) => {
+      expect(state.state).toEqual(preparedData[7])
+    })
 })

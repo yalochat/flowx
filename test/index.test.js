@@ -169,7 +169,6 @@ const fakeRequestWatchdog = () => {
 
 beforeEach(() => (Flowx.new()
   .then((flowxServer) => {
-    // console.log('Flowx server created')
     const flow = new flowxServer.Flow('myFlow', data)
     const key = {
       id: '111',
@@ -177,7 +176,6 @@ beforeEach(() => (Flowx.new()
     }
     return flow.getInstance(key)
       .then((bot) => {
-        // console.log('Flowx instance created.')
         instance = { flow, bot }
       })
   })
@@ -279,8 +277,6 @@ test('Get state with a watchdog transition', () => {
       value: 'I want to buy a flight ticket',
     },
   ]
-
-  console.log("BOT: %j", bot)
 
   return flow.getState(bot, { action: 'toState7' })
     .then((state) => {

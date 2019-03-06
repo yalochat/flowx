@@ -1,0 +1,131 @@
+{
+  "flow": "test1",
+  "ttl": 10000,
+  "globalTransitions": [
+    {
+      "when": "toState1",
+      "to": "state1"
+    }
+  ],
+  "states": [
+    {
+      "id": 1,
+      "name": "state1",
+      "transitions": [
+        {
+          "when": "toState2",
+          "to": 2
+        },
+        {
+          "when": "toState3",
+          "type": "user",
+          "confidence": "",
+          "to": 3
+        },
+        {
+          "when": "buy-ticket",
+          "to": "state8",
+          "type": "watchdog",
+          "confidence": 0.5
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "state2",
+      "transitions": [
+        {
+          "when": "toState1",
+          "to": 1
+        },
+        {
+          "when": "/\\d/i",
+          "to": "state3"
+        },
+        {
+          "when": "init",
+          "to": "state4",
+          "type": "user"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "state3",
+      "transitions": [
+        {
+          "when": "toState2",
+          "to": "state2"
+        },
+        {
+          "when": "*",
+          "to": "state1"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "globalState",
+      "global": true,
+      "transitions": [
+        {
+          "when": "toState1",
+          "to": "state1"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "name": "default",
+      "globalTransitions": true,
+      "transitions": [
+        {
+          "when": "toState2",
+          "to": "state2"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "state4",
+      "transitions": [
+        {
+          "when": "toState1",
+          "to": "state1"
+        },
+        {
+          "when": "toState7",
+          "to": 7
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "name": "state7",
+      "transitions": [
+        {
+          "when": "promo",
+          "to": "state1",
+          "type": "watchdog",
+          "confidence": 0.6
+        },
+        {
+          "when": "buy-ticket",
+          "to": "state8",
+          "type": "watchdog",
+          "confidence": 0.6
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "name": "state8",
+      "transitions": [
+        {
+          "when": "toState1",
+          "to": "state1"
+        }
+      ]
+    }
+  ]
+}

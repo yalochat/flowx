@@ -1,139 +1,9 @@
-// const fx = require('fixtures')
 const nock = require('nock')
-const sinon = require('sinon')
 
 const Flowx = require('../')
 const Util = require('../lib/utils')
 
-const data = {
-  flow: 'test1',
-  ttl: 10000,
-  globalTransitions: [
-    {
-      when: 'toState1',
-      to: 'state1'
-    }
-  ],
-  states: [
-    {
-      id: 1,
-      name: 'state1',
-      transitions: [
-        {
-          when: 'toState2',
-          to: 2
-        },
-        {
-          when: 'toState3',
-          to: 'state3',
-          type: 'test',
-          confidence: 0.5
-        },
-        {
-          when: 'toState7',
-          to: 7
-        }
-      ]
-    },
-    {
-      id: 2,
-      name: 'state2',
-      transitions: [
-        {
-          when: 'toState1',
-          to: 1
-        },
-        {
-          when: '/\\d/i',
-          to: 'state3'
-        },
-        {
-          when: 'init',
-          to: 'state4',
-          type: 'user'
-        }
-      ]
-    },
-    {
-      id: 3,
-      name: 'state3',
-      transitions: [
-        {
-          when: 'toState2',
-          to: 'state2'
-        },
-        {
-          when: '*',
-          to: 'state1'
-        }
-      ]
-    },
-    {
-      id: 4,
-      name: 'globalState',
-      global: true,
-      transitions: [
-        {
-          when: 'toState1',
-          to: 'state1'
-        }
-      ]
-    },
-    {
-      id: 6,
-      name: 'default',
-      globalTransitions: true,
-      transitions: [
-        {
-          when: 'toState2',
-          to: 'state2'
-        }
-      ]
-    },
-    {
-      id: 5,
-      name: 'state4',
-      transitions: [
-        {
-          when: 'toState1',
-          to: 'state1'
-        },
-        {
-          when: 'toState7',
-          to: 7
-        }
-      ]
-    },
-    {
-      id: 7,
-      name: 'state7',
-      transitions: [
-        {
-          when: 'promo',
-          to: 'state1',
-          type: 'watchdog',
-          confidence: 0.6,
-        },
-        {
-          when: 'buy-ticket',
-          to: 'state8',
-          type: 'watchdog',
-          confidence: 0.6,
-        },
-      ]
-    },
-    {
-      id: 8,
-      name: 'state8',
-      transitions: [
-        {
-          when: 'toState1',
-          to: 'state1',
-        },
-      ]
-    }
-  ]
-}
+const data = require('./fixtures/flow.json')
 
 const preparedData = Util.prepareModel(data).states.toJS()
 const watchdogBaseUri = process.env.WATCHDOG_BASE_URI
@@ -142,7 +12,8 @@ let instance
 
 const fakeRequestWatchdog = () => {
   nock(watchdogBaseUri)
-    .post('/domains/myFlow/intents/search?numIntents=3')
+    .post('/domains/myFlow/intents/search')
+    .query({ numIntents: 3 })
     .reply(200, {
       domain: 'test',
       results: [
@@ -230,13 +101,13 @@ test('Get state using global transition', () => {
   })
 })
 
-test('Get state with confidence', () => {
+test('Get state via transition with confidence but not marked as watchdog', () => {
+  fakeRequestWatchdog()
   const { flow, bot } = instance
   const actions = [
     {
-      type: 'test',
+      type: 'user',
       value: 'toState3',
-      confidence: 0.6,
     },
   ]
   return flow.getState(bot, { action: actions }).then((state) => {
@@ -244,28 +115,15 @@ test('Get state with confidence', () => {
   })
 })
 
-test('Get state with actions array without type', () => {
+test('Get state with actions array with type without confidence and without type', () => {
   const { flow, bot } = instance
   const actions = [
     {
-      value: 'toState2',
+      value: '*',
     },
   ]
   return flow.getState(bot, { action: actions }).then((state) => {
-    expect(state.state).toEqual(preparedData[1])
-  })
-})
-
-test('Get state with actions array with type without confidence', () => {
-  const { flow, bot } = instance
-  const actions = [
-    {
-      value: 'init',
-      type: 'user',
-    },
-  ]
-  return flow.getState(bot, { action: actions }).then((state) => {
-    expect(state.state).toEqual(preparedData[5])
+    expect(state.state).toEqual(preparedData[0])
   })
 })
 
@@ -278,13 +136,7 @@ test('Get state with a watchdog transition', () => {
     },
   ]
 
-  return flow.getState(bot, { action: 'toState7' })
-    .then((state) => {
-      expect(state.state).toEqual(preparedData[6])
-
-      const bot_new = Object.assign({}, bot, { currentState: state.state })
-      return flow.getState(bot_new, { action: actions })
-    })
+  return flow.getState(bot, { action: actions })
     .then((state) => {
       expect(state.state).toEqual(preparedData[7])
     })
